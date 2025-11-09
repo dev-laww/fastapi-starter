@@ -15,6 +15,8 @@ from ..constants import Constants
 from ..routing.utils import parse_version
 
 
+# TODO: Add support for default api version, latest version, and version negotiation strategies e.g., "latest", "stable", etc.
+
 class VersionMiddleware:
     """
     Use this middleware to parse the Accept Header if present and get an API version
