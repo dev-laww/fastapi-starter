@@ -21,6 +21,10 @@ class Settings(BaseSettings):
         default="Service for user authentication and management",
         description="The description of the application"
     )
+    default_api_version: str = Field(
+        default="1.0.0",
+        description="The default API version for the application"
+    )
 
     database_url: str = Field(..., description="Database connection URL")
     database_pool_size: int = Field(default=10, description="Database connection pool size")
@@ -41,6 +45,7 @@ class Settings(BaseSettings):
         env_ignore_empty=True,
         env_file_encoding="utf-8"
     )
+
 
     @property
     def is_production(self) -> bool:
