@@ -64,7 +64,7 @@ from typing import Any, Optional
 
 from fastapi import APIRouter
 
-from ..extractor import Extractor, DefaultExtractor
+from ..utils.extractor import Extractor, DefaultExtractor
 from ...logging import get_logger
 
 logger = get_logger(__name__)

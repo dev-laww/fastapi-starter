@@ -12,10 +12,11 @@ from starlette.routing import BaseRoute, Match
 from starlette.types import ASGIApp, Scope, Receive, Send, Lifespan
 
 from ..dto import VersionMetadata
+from ..utils import parse_version
 from ...constants import Constants
 from ...exceptions import VersionNotSupportedError
 from ...response import Response
-from ...utils import parse_version
+
 
 # TODO: Add support for version ranges (e.g., ">=1.0.0,<2.0.0")
 # TODO: Add support for method decorators (e.g., @router.get, @router.post) with versioning
@@ -110,14 +111,3 @@ class VersionedRouter(APIRouter):
             include_in_schema=include_in_schema,
             generate_unique_id_function=generate_unique_id_function,
         )
-
-    def version(self, version: Union[str, Version]) -> Callable[[DecoratedCallable], DecoratedCallable]:
-        def decorator(func: DecoratedCallable):
-            parsed_version = parse_version(version) if isinstance(version, str) else version
-            version_metadata = VersionMetadata(version=parsed_version)
-
-            setattr(func, Constants.VERSION_METADATA_ATTR, version_metadata)
-
-            return func
-
-        return decorator

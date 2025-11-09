@@ -3,19 +3,42 @@ from typing import Optional, Type, Any, Sequence, Union, List, Dict, Callable, S
 
 from fastapi import params
 from fastapi.datastructures import Default
+from fastapi.routing import APIRoute
+from fastapi.types import DecoratedCallable
 from h11 import Response
 from semver import Version
 from starlette.responses import JSONResponse
 from starlette.routing import BaseRoute
 
-from .app_router import AppRoute
-from .dto import RouteMetadata, SetIntStr, DictIntStrAny, AnyCallable, VersionMetadata
+from .dto import RouteMetadata, SetIntStr, DictIntStrAny, VersionMetadata
+from .utils import parse_version
 from ..constants import Constants
-from ..utils import parse_version
 
 
 # TODO: add websocket route support
 
+def version(version: Union[str, Version]):  # noqa
+    """
+    Decorator to specify the version of an API route.
+
+    Args:
+        version (Union[str, Version]): The version string or Version object.
+
+    Returns:
+        Callable[[DecoratedCallable], DecoratedCallable]: The decorated callable with version metadata.
+    """
+
+    def decorator(method: DecoratedCallable) -> DecoratedCallable:
+        parsed_version = parse_version(version) if isinstance(version, str) else version
+
+        version_metadata = VersionMetadata(version=parsed_version)
+        setattr(method, Constants.VERSION_METADATA_ATTR, version_metadata)
+        return method
+
+    return decorator
+
+
+_version_decorator = version
 
 def route(
     path: str,
@@ -40,24 +63,15 @@ def route(
     include_in_schema: bool = True,
     response_class: Type[Response] = Default(JSONResponse),
     name: Optional[str] = None,
-    route_class_override: Optional[Type[AppRoute]] = None,
+    route_class_override: Optional[Type[APIRoute]] = None,
     callbacks: Optional[List[BaseRoute]] = None,
     openapi_extra: Optional[Dict[str, Any]] = None,
-    version: Optional[str] = None,
-    deprecated_in: Optional[str] = None,
-    removed_in: Optional[str] = None,
+    version: Optional[Union[str, Version]] = None,  # noqa
     **kwargs: Any
-):
-    def decorator(method: AnyCallable):
-        parsed_version = parse_version(version) if version else Version(1)
-        parsed_deprecated_in = parse_version(deprecated_in) if deprecated_in else None
-        parsed_removed_in = parse_version(removed_in) if removed_in else None
-
-        version_metadata = VersionMetadata(
-            version=parsed_version,
-            deprecated_in=parsed_deprecated_in,
-            removed_in=parsed_removed_in
-        )
+) -> Callable[[DecoratedCallable], DecoratedCallable]:
+    def decorator(method: DecoratedCallable) -> DecoratedCallable:
+        # Call the version decorator if version is provided so no need for multiple decorators
+        decorated_method = _version_decorator(version)(method) if version else method
 
         route_metadata = RouteMetadata(
             path=path,
@@ -87,9 +101,8 @@ def route(
             **kwargs  # noqa
         )
 
-        setattr(method, Constants.VERSION_METADATA_ATTR, version_metadata)
-        setattr(method, Constants.ROUTE_METADATA_ATTR, route_metadata)
-        return method
+        setattr(decorated_method, Constants.ROUTE_METADATA_ATTR, route_metadata)
+        return decorated_method
 
     return decorator
 
@@ -118,11 +131,9 @@ def get(
     name: Optional[str] = None,
     callbacks: Optional[List[BaseRoute]] = None,
     openapi_extra: Optional[Dict[str, Any]] = None,
-    version: Optional[str] = None,
-    deprecated_in: Optional[str] = None,
-    removed_in: Optional[str] = None,
+    version: Optional[str] = None,  # noqa
     **kwargs: Any
-) -> Callable[[AnyCallable], AnyCallable]:
+) -> Callable[[DecoratedCallable], DecoratedCallable]:
     return route(
         path,
         methods=['GET'],
@@ -148,8 +159,6 @@ def get(
         callbacks=callbacks,
         openapi_extra=openapi_extra,
         version=version,
-        deprecated_in=deprecated_in,
-        removed_in=removed_in,
         **kwargs
     )
 
@@ -178,11 +187,9 @@ def post(
     name: Optional[str] = None,
     callbacks: Optional[List[BaseRoute]] = None,
     openapi_extra: Optional[Dict[str, Any]] = None,
-    version: Optional[str] = None,
-    deprecated_in: Optional[str] = None,
-    removed_in: Optional[str] = None,
+    version: Optional[str] = None,  # noqa
     **kwargs: Any
-) -> Callable[[AnyCallable], AnyCallable]:
+) -> Callable[[DecoratedCallable], DecoratedCallable]:
     return route(
         path,
         methods=['POST'],
@@ -208,8 +215,6 @@ def post(
         callbacks=callbacks,
         openapi_extra=openapi_extra,
         version=version,
-        deprecated_in=deprecated_in,
-        removed_in=removed_in,
         **kwargs
     )
 
@@ -238,11 +243,9 @@ def put(
     name: Optional[str] = None,
     callbacks: Optional[List[BaseRoute]] = None,
     openapi_extra: Optional[Dict[str, Any]] = None,
-    version: Optional[str] = None,
-    deprecated_in: Optional[str] = None,
-    removed_in: Optional[str] = None,
+    version: Optional[str] = None,  # noqa
     **kwargs: Any
-) -> Callable[[AnyCallable], AnyCallable]:
+) -> Callable[[DecoratedCallable], DecoratedCallable]:
     return route(
         path,
         methods=['PUT'],
@@ -268,8 +271,6 @@ def put(
         callbacks=callbacks,
         openapi_extra=openapi_extra,
         version=version,
-        deprecated_in=deprecated_in,
-        removed_in=removed_in,
         **kwargs
     )
 
@@ -298,11 +299,9 @@ def patch(
     name: Optional[str] = None,
     callbacks: Optional[List[BaseRoute]] = None,
     openapi_extra: Optional[Dict[str, Any]] = None,
-    version: Optional[str] = None,
-    deprecated_in: Optional[str] = None,
-    removed_in: Optional[str] = None,
+    version: Optional[str] = None,  # noqa
     **kwargs: Any
-) -> Callable[[AnyCallable], AnyCallable]:
+) -> Callable[[DecoratedCallable], DecoratedCallable]:
     return route(
         path,
         methods=['PATCH'],
@@ -328,8 +327,6 @@ def patch(
         callbacks=callbacks,
         openapi_extra=openapi_extra,
         version=version,
-        deprecated_in=deprecated_in,
-        removed_in=removed_in,
         **kwargs
     )
 
@@ -358,11 +355,9 @@ def delete(
     name: Optional[str] = None,
     callbacks: Optional[List[BaseRoute]] = None,
     openapi_extra: Optional[Dict[str, Any]] = None,
-    version: Optional[str] = None,
-    deprecated_in: Optional[str] = None,
-    removed_in: Optional[str] = None,
+    version: Optional[str] = None,  # noqa
     **kwargs: Any
-) -> Callable[[AnyCallable], AnyCallable]:
+) -> Callable[[DecoratedCallable], DecoratedCallable]:
     return route(
         path,
         methods=['DELETE'],
@@ -388,8 +383,6 @@ def delete(
         callbacks=callbacks,
         openapi_extra=openapi_extra,
         version=version,
-        deprecated_in=deprecated_in,
-        removed_in=removed_in,
         **kwargs
     )
 
@@ -418,11 +411,9 @@ def head(
     name: Optional[str] = None,
     callbacks: Optional[List[BaseRoute]] = None,
     openapi_extra: Optional[Dict[str, Any]] = None,
-    version: Optional[str] = None,
-    deprecated_in: Optional[str] = None,
-    removed_in: Optional[str] = None,
+    version: Optional[str] = None,  # noqa
     **kwargs: Any
-) -> Callable[[AnyCallable], AnyCallable]:
+) -> Callable[[DecoratedCallable], DecoratedCallable]:
     return route(
         path,
         methods=['HEAD'],
@@ -448,8 +439,6 @@ def head(
         callbacks=callbacks,
         openapi_extra=openapi_extra,
         version=version,
-        deprecated_in=deprecated_in,
-        removed_in=removed_in,
         **kwargs
     )
 
@@ -478,11 +467,9 @@ def option(
     name: Optional[str] = None,
     callbacks: Optional[List[BaseRoute]] = None,
     openapi_extra: Optional[Dict[str, Any]] = None,
-    version: Optional[str] = None,
-    deprecated_in: Optional[str] = None,
-    removed_in: Optional[str] = None,
+    version: Optional[str] = None,  # noqa
     **kwargs: Any
-) -> Callable[[AnyCallable], AnyCallable]:
+) -> Callable[[DecoratedCallable], DecoratedCallable]:
     return route(
         path,
         methods=['OPTION'],
@@ -508,8 +495,6 @@ def option(
         callbacks=callbacks,
         openapi_extra=openapi_extra,
         version=version,
-        deprecated_in=deprecated_in,
-        removed_in=removed_in,
         **kwargs
     )
 
@@ -538,11 +523,9 @@ def trace(
     name: Optional[str] = None,
     callbacks: Optional[List[BaseRoute]] = None,
     openapi_extra: Optional[Dict[str, Any]] = None,
-    version: Optional[str] = None,
-    deprecated_in: Optional[str] = None,
-    removed_in: Optional[str] = None,
+    version: Optional[str] = None,  # noqa
     **kwargs: Any
-) -> Callable[[AnyCallable], AnyCallable]:
+) -> Callable[[DecoratedCallable], DecoratedCallable]:
     return route(
         path,
         methods=['TRACE'],
@@ -568,7 +551,5 @@ def trace(
         callbacks=callbacks,
         openapi_extra=openapi_extra,
         version=version,
-        deprecated_in=deprecated_in,
-        removed_in=removed_in,
         **kwargs
     )

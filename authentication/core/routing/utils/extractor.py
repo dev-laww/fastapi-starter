@@ -3,7 +3,7 @@ from typing import Any
 
 from fastapi import APIRouter
 
-from .dto import RouterMetadata
+from ..dto import RouterMetadata
 
 
 class Extractor(ABC):

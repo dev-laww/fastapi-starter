@@ -11,8 +11,8 @@ from asgiref.typing import (
 )
 from fastapi import FastAPI
 
-from authentication.core import Constants
-from authentication.core.utils import parse_version
+from ..constants import Constants
+from ..routing.utils import parse_version
 
 
 class VersionMiddleware:

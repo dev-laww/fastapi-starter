@@ -1,8 +1,7 @@
-from .app_router import AppRouter
 from .decorators import *
 from .dto import RouterMetadata, RouteMetadata
-from .extractor import *
 from .routers import FileRouter, AppRouter, VersionedRouter, VersionedRoute
+from .utils.extractor import *
 
 __all__ = [
     "RouterMetadata",
