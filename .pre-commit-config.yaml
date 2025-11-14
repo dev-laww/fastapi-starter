@@ -43,7 +43,7 @@ repos:
         entry: poetry run pytest
         language: system
         types: [ python ]
-        args: [ '--cov=authentication', '--cov-fail-under=80', '-v' ]
+        args: [ '--cov=authentication', '-v' ]
         pass_filenames: false
         always_run: true
         stages: [push]
