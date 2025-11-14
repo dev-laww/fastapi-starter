@@ -196,6 +196,8 @@ pyrightconfig.json
 .idea/**/contentModel.xml
 
 # Sensitive or high-churn files
+.idea/**/data_source_mapping.xml
+.idea/**/dataSources.xml
 .idea/**/dataSources/
 .idea/**/dataSources.ids
 .idea/**/dataSources.local.xml
