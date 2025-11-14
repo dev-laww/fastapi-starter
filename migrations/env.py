@@ -63,16 +63,11 @@ async def create_database():
     db_name = url_obj.database
     admin_url = url_obj.set(database="postgres")
 
-    engine = create_async_engine(
-        admin_url,
-        isolation_level="AUTOCOMMIT",
-        future=True
-    )
+    engine = create_async_engine(admin_url, isolation_level="AUTOCOMMIT", future=True)
 
     async with engine.connect() as conn:
         result = await conn.execute(
-            text("SELECT 1 FROM pg_database WHERE datname=:name"),
-            {"name": db_name}
+            text("SELECT 1 FROM pg_database WHERE datname=:name"), {"name": db_name}
         )
 
         exists = result.scalar() is not None
@@ -85,13 +80,11 @@ async def create_database():
 
 
 def do_migrations(connection: Connection):
-    context.configure(
-        connection=connection,
-        target_metadata=target_metadata
-    )
+    context.configure(connection=connection, target_metadata=target_metadata)
 
     with context.begin_transaction():
         context.run_migrations()
+
 
 async def run_migrations_online() -> None:
     """Run migrations in 'online' mode.
@@ -102,11 +95,7 @@ async def run_migrations_online() -> None:
     """
     await create_database()
 
-    connectable = create_async_engine(
-        database_url,
-        echo=False,
-        future=True
-    )
+    connectable = create_async_engine(database_url, echo=False, future=True)
 
     async with connectable.connect() as connection:
         await connection.run_sync(do_migrations)
