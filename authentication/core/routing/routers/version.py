@@ -11,6 +11,7 @@ from starlette.routing import BaseRoute, Match
 from starlette.types import ASGIApp, Scope, Receive, Send, Lifespan
 
 from ..dto import VersionMetadata
+from ..utils import VersionRegistry
 from ...constants import Constants
 from ...exceptions import VersionNotSupportedError
 from ...response import Response
@@ -33,14 +34,18 @@ class VersionedRoute(APIRoute):
     @property
     def version(self) -> Optional[Version]:
         version_metadata = self.version_metadata
+
         if version_metadata:
             return version_metadata.version
-        return None
+
+        registry = VersionRegistry.get_instance()
+
+        return registry.default_version
 
     def is_requested_version_matches(self, scope: Scope) -> bool:
         requested_version = scope.get(Constants.REQUESTED_VERSION_SCOPE_KEY)
 
-        if not requested_version or not self.version:
+        if not requested_version:  # should not happen when used with VersionMiddleware
             return False
 
         return requested_version == self.version

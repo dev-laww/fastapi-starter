@@ -8,14 +8,18 @@ from asgiref.typing import (
     HTTPScope,
     Scope,
     WebSocketScope,
+    ASGISendEvent,
 )
 from fastapi import FastAPI
+from semver import Version
 
+from .. import settings
 from ..constants import Constants
-from ..routing.utils import parse_version
+from ..logging import get_logger
+from ..routing import VersionedRoute
+from ..routing.utils import parse_version, VersionRegistry
 
-
-# TODO: Add support for default api version, latest version, and version negotiation strategies e.g., "latest", "stable", etc.
+logger = get_logger(__name__)
 
 
 class VersionMiddleware:
@@ -57,6 +61,9 @@ class VersionMiddleware:
         scope = cast(Union[HTTPScope, WebSocketScope], scope)
         headers = dict(scope.get("headers", []))
 
+        registry = VersionRegistry.get_instance()
+        scope[Constants.REQUESTED_VERSION_SCOPE_KEY] = registry.default_version
+
         if b"accept" in headers:
             accept_header = headers[b"accept"].decode("latin1")
             # Use search() instead of match() to find the pattern anywhere in the header
@@ -69,9 +76,63 @@ class VersionMiddleware:
                     version_str
                 )
 
-        return await self.app(scope, receive, send)
+        async def send_wrapper(evt: ASGISendEvent):
+            if evt["type"] != "http.response.start":
+                await send(evt)
+                return
+
+            event_headers = evt.setdefault("headers", [])
+            version = scope.get(Constants.REQUESTED_VERSION_SCOPE_KEY)
+            event_headers.append(
+                (b"x-api-latest-version", str(registry.latest_version).encode("latin1"))
+            )
+            event_headers.append(
+                (
+                    b"x-api-available-versions",
+                    ",".join(str(v) for v in sorted(registry.all_versions)).encode(
+                        "latin1"
+                    ),
+                )
+            )
+
+            if not version:
+                await send(evt)
+                return
+
+            version_header_value = str(version).encode("latin1")
+            event_headers.append((b"x-api-version", version_header_value))
+
+            await send(evt)
+
+        return await self.app(scope, receive, send_wrapper)
 
 
 def setup_version_middleware(app: FastAPI, vendor_prefix: str) -> None:
     """Sets up the version middleware for the ASGI application."""
-    app.add_middleware(VersionMiddleware, vendor_prefix=vendor_prefix)
+    app.add_middleware(VersionMiddleware, vendor_prefix=vendor_prefix)  # type: ignore
+
+    registry = VersionRegistry()
+    registry.add_version(Version(1))
+
+    # Register all versions from the app's routes
+    for route in app.routes:
+        if not isinstance(route, VersionedRoute):
+            continue
+
+        if registry.has_version(route.version):
+            continue
+
+        registry.add_version(route.version)
+
+    registry.default_version = (
+        registry.latest_version
+        if settings.default_api_version == "latest"
+        else parse_version(settings.default_api_version)
+    )
+
+    logger.info("API Versioning Middleware configured")
+    logger.info(f"Default API version: {registry.default_version}")
+    logger.info(f"Latest API version: {registry.latest_version}")
+    logger.info(
+        f"Available API versions: {", ".join(str(v) for v in registry.all_versions)}"
+    )

@@ -28,7 +28,7 @@ class Settings(BaseSettings):
         description="The description of the application",
     )
     default_api_version: str = Field(
-        default="1.0.0", description="The default API version for the application"
+        default="latest", description="The default API version for the application"
     )
 
     database_url: str = Field(..., description="Database connection URL")
