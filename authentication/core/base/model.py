@@ -110,3 +110,7 @@ class BaseDBModel(SQLModel, BaseModel, table=False):
         cls.deleted_at = Field(default=None, sa_column=Column(DateTime(timezone=True)))
 
         super().__init_subclass__(**kwargs)
+
+    @property
+    def is_deleted(self) -> bool:
+        return self.deleted_at is not None
