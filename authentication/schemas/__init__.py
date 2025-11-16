@@ -1,9 +1,10 @@
 from .common import PaginationInfo, PaginatedResponse, PaginationParams
-from .role import Role
+from .role import CreateRole, UpdateRole
 
 __all__ = [
     "PaginationParams",
     "PaginationInfo",
     "PaginatedResponse",
-    "Role",
+    "CreateRole",
+    "UpdateRole",
 ]
