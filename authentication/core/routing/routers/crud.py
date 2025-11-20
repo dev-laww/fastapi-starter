@@ -200,7 +200,7 @@ class AppCRUDRouter[T](AppRouter):
             )
 
             return AppResponse.ok(
-                message="Roles retrieved successfully",
+                message=f"{pluralize(self.model_name.capitalize())} retrieved successfully",
                 data=PaginatedResponse(
                     pagination=pagination,
                     items=roles,
