@@ -203,6 +203,7 @@ class FileRouter(APIRouter):
         logger.info(
             f"Routers registered: {self._discovery_stats['routers_registered']}"
         )
+        logger.info(f"Total routes registered: {len(self.routes)}")
 
         if self._discovery_stats["errors"]:
             logger.warning(

@@ -54,7 +54,7 @@ class VersionedRoute(APIRoute):
     def matches(self, scope: Scope) -> Tuple[Match, Scope]:
         match, updated_scope = super().matches(scope)
 
-        if match == Match.NONE or match == Match.PARTIAL:
+        if match is not Match.FULL:
             return match, updated_scope
 
         if not self.is_requested_version_matches(scope):
@@ -63,9 +63,7 @@ class VersionedRoute(APIRoute):
         return Match.FULL, updated_scope
 
     async def handle(self, scope: Scope, receive: Receive, send: Send) -> None:
-        requested_version = scope.get(Constants.REQUESTED_VERSION_SCOPE_KEY)
-
-        if requested_version and not self.is_requested_version_matches(scope):
+        if not self.is_requested_version_matches(scope):
             raise VersionNotSupportedError("Invalid API version for this endpoint")
 
         await super().handle(scope, receive, send)

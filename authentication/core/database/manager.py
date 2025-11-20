@@ -8,7 +8,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from authentication.core.base import AppObject
 from authentication.core.config import settings
-from authentication.core.exceptions import DatabaseError
+from authentication.core.exceptions import DatabaseError, AppException
 from authentication.core.logging import get_logger
 
 logger = get_logger(__name__)
@@ -84,9 +84,15 @@ class DatabaseManager(AppObject):
             logger.debug("Database session created")
             try:
                 yield session
+            except AppException as e:
+                if e.status_code >= 500:
+                    logger.error(f"AppException occurred: {str(e)}", exc_info=True)
+                    raise e
+
+                raise
             except Exception as e:
                 logger.error(f"Error during database session usage: {str(e)}")
-                raise
+                raise e
             finally:
                 logger.debug("Database session closed")
 

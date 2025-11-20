@@ -117,16 +117,17 @@ def setup_exception_handlers(app: FastAPI):
     @app.exception_handler(AppException)
     async def app_exception_handler(request: Request, exc: AppException):
         """Handle all custom application exceptions."""
-        logger.error(
-            f"{exc.code}: {exc.message}",
-            extra={
-                "path": request.url.path,
-                "method": request.method,
-                "code": exc.code,
-                "details": exc.details,
-            },
-            exc_info=exc.status_code >= 500,
-        )
+        if exc.status_code >= 500:
+            logger.error(
+                f"{exc.code}: {exc.message}",
+                extra={
+                    "path": request.url.path,
+                    "method": request.method,
+                    "code": exc.code,
+                    "details": exc.details,
+                },
+                exc_info=exc.status_code >= 500,
+            )
 
         response_map: Dict[Type[Exception], Callable[[], Response]] = {
             AuthenticationError: lambda: Response.failure(

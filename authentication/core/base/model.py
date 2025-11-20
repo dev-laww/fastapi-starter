@@ -1,9 +1,9 @@
 import datetime
 import uuid
-from typing import Literal, Any, Callable, Optional
+from typing import Literal, Any, Callable, Optional, Type
 
 import arrow
-from pydantic import BaseModel as PydanticBaseModel, ConfigDict
+from pydantic import BaseModel as PydanticBaseModel, ConfigDict, create_model
 from pydantic.alias_generators import to_camel
 from pydantic.main import IncEx
 from sqlalchemy import Column, DateTime
@@ -82,6 +82,27 @@ class BaseModel(PydanticBaseModel):
             fallback=fallback,
             serialize_as_any=serialize_as_any,
         )
+
+    @classmethod
+    def make_fields_optional(
+        cls, schema_name: Optional[str] = None
+    ) -> Type["BaseModel"]:
+        """
+        Creates a new Pydantic model class with all fields made optional.
+
+        Returns:
+            A new Pydantic model class with all fields optional.
+        """
+        optional_fields = {
+            field_name: (Optional[field_info.annotation], None)
+            for field_name, field_info in cls.model_fields.items()
+        }
+
+        update_model = create_model(
+            schema_name or f"{cls.__name__}Optional", __base__=cls, **optional_fields
+        )
+
+        return update_model
 
 
 class BaseDBModel(SQLModel, BaseModel, table=False):
