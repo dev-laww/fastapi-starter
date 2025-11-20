@@ -135,7 +135,7 @@ class AppCRUDRouter[T](AppRouter):
             self.http_router.add_api_route(
                 "/{id}",
                 self.update,
-                methods=["PUT", "PATCH"],
+                methods=["PATCH"],
                 name=f"update_{self.model_name}",
             )
 
