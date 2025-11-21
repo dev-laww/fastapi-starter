@@ -1,18 +1,19 @@
 from typing import Annotated
 
-from fastapi import Depends
+from fastapi import Depends, Request
+from starlette.responses import Response
 
 from ..controllers.auth import AuthController
 from ..core.routing import AppRouter, post
-from ..schemas.auth import EmailLogin
+from ..schemas.auth import EmailLogin, EmailRegister
 
 
 class AuthRouter(AppRouter):
     controller: Annotated[AuthController, Depends()]
 
     @post("/login")
-    async def login(self, login: EmailLogin):
-        return await self.controller.login(login)
+    async def login(self, login: EmailLogin, request: Request, response: Response):
+        return await self.controller.login(login, request, response)
 
     @post("/login/social")
     async def social_login(self):
@@ -23,8 +24,10 @@ class AuthRouter(AppRouter):
         return await self.controller.logout()
 
     @post("/register")
-    async def register(self):
-        return await self.controller.register()
+    async def register(
+        self, register_data: EmailRegister, request: Request, response: Response
+    ):
+        return await self.controller.register(register_data, request, response)
 
     @post("/refresh-token")
     async def refresh_token(self):
