@@ -147,7 +147,7 @@ class IsNotNull(Filter):
 
 
 # Utility functions for creating filters
-def gt(value: Number) -> GreaterThan:
+def gt(value: Any) -> GreaterThan:
     """
     Creates a greater than filter.
 
@@ -157,7 +157,7 @@ def gt(value: Number) -> GreaterThan:
     return GreaterThan(value)
 
 
-def gte(value: Number) -> GreaterThanOrEqual:
+def gte(value: Any) -> GreaterThanOrEqual:
     """
     Creates a greater than or equal filter.
 
@@ -167,7 +167,7 @@ def gte(value: Number) -> GreaterThanOrEqual:
     return GreaterThanOrEqual(value)
 
 
-def lt(value: Number) -> LessThan:
+def lt(value: Any) -> LessThan:
     """
     Creates a less than filter.
 
@@ -177,7 +177,7 @@ def lt(value: Number) -> LessThan:
     return LessThan(value)
 
 
-def lte(value: Number) -> LessThanOrEqual:
+def lte(value: Any) -> LessThanOrEqual:
     """
     Creates a less than or equal filter.
 
