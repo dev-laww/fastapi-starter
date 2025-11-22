@@ -45,6 +45,11 @@ class Settings(BaseSettings):
 
     jwt_secret: str = Field(..., description="Secret key used for JWT token generation")
 
+    resend_api_key: str = Field(..., description="API key for Resend email service")
+    resend_email_from: str = Field(
+        description="Default 'from' email address for sending emails",
+    )
+
     enable_api_docs: bool = Field(
         default=True, description="Enable or disable API documentation endpoints"
     )
