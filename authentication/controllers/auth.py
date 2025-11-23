@@ -87,9 +87,6 @@ class AuthController(Controller):
         )
 
     async def register(self, data: EmailRegister, request: Request, response: Response):
-        if data.password != data.confirm_password:
-            raise ValidationError("Passwords do not match")
-
         if await self.user_repository.exists(email=data.email):
             raise ValidationError(
                 "Email already registered, please use a different email"
@@ -270,9 +267,6 @@ class AuthController(Controller):
         )
 
     async def reset_password(self, data: ResetPassword):
-        if data.password != data.confirm_password:
-            raise ValidationError("Passwords do not match")
-
         verification = await self.verification_repository.get_first(
             value=data.token, identifier=VerificationIdentifier.PASSWORD_RESET.value
         )

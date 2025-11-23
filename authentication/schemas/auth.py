@@ -2,7 +2,7 @@ import datetime
 from typing import Optional
 from uuid import UUID
 
-from pydantic import EmailStr
+from pydantic import EmailStr, model_validator
 
 from ..core.base import BaseModel
 
@@ -12,10 +12,19 @@ class EmailLogin(BaseModel):
     password: str
 
 
-class EmailRegister(BaseModel):
-    email: EmailStr
+class PasswordValidate(BaseModel):
     password: str
     confirm_password: str
+
+    @model_validator(mode="after")
+    def passwords_match(self):
+        if self.password != self.confirm_password:
+            raise ValueError("Passwords do not match")
+        return self
+
+
+class EmailRegister(PasswordValidate):
+    email: EmailStr
 
 
 class AuthUser(BaseModel):
@@ -48,7 +57,5 @@ class EmailWithCallback(CallbackBase):
     email: EmailStr
 
 
-class ResetPassword(BaseModel):
+class ResetPassword(PasswordValidate):
     token: str
-    password: str
-    confirm_password: str
