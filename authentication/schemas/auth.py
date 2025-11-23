@@ -1,4 +1,5 @@
 import datetime
+from typing import Optional
 from uuid import UUID
 
 from pydantic import EmailStr
@@ -33,3 +34,21 @@ class AuthResponse(BaseModel):
     session: AuthSession
     access_token: str
     token_type: str = "bearer"
+
+
+class CallbackBase(BaseModel):
+    callback_url: Optional[str] = None
+
+
+class VerifyEmail(CallbackBase):
+    token: str
+
+
+class EmailWithCallback(CallbackBase):
+    email: EmailStr
+
+
+class ResetPassword(BaseModel):
+    token: str
+    password: str
+    confirm_password: str

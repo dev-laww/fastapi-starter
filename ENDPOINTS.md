@@ -38,16 +38,15 @@ HTTP method and path.
 
 ### Authentication
 
-- [ ] `POST /auth/login`
+- [x] `POST /auth/login`
 - [ ] `POST /auth/login/social`
 - [ ] `POST /auth/logout`
-- [ ] `POST /auth/register`
-- [ ] `POST /auth/verify`
-- [ ] `POST /auth/resend-verification`
-- [ ] `POST /auth/password/forgot`
-- [ ] `POST /auth/password/reset`
+- [x] `POST /auth/register`
+- [x] `POST /auth/verify`
+- [x] `POST /auth/send-verification`
+- [x] `POST /auth/password/forgot`
+- [x] `POST /auth/password/reset`
 - [ ] `POST /auth/refresh`
-- [ ] `GET  /auth/me`
 
 ### Profile Management
 

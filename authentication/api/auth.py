@@ -4,8 +4,14 @@ from fastapi import Depends, Request
 from starlette.responses import Response
 
 from ..controllers.auth import AuthController
-from ..core.routing import AppRouter, post
-from ..schemas.auth import EmailLogin, EmailRegister
+from ..core.routing import AppRouter, post, get
+from ..schemas.auth import (
+    EmailLogin,
+    EmailRegister,
+    EmailWithCallback,
+    ResetPassword,
+    VerifyEmail,
+)
 
 
 class AuthRouter(AppRouter):
@@ -30,24 +36,24 @@ class AuthRouter(AppRouter):
         return await self.controller.register(register_data, request, response)
 
     @post("/refresh-token")
-    async def refresh_token(self):
+    async def refresh_token(self, request: Request, response: Response):
         return await self.controller.refresh_token()
 
-    @post("/verify-email")
-    async def verify_email(self):
-        return await self.controller.verify_email()
+    @get("/verify")
+    async def verify_email(self, data: VerifyEmail = Depends()):
+        return await self.controller.verify_email(data)
 
-    @post("/send-verification-email")
-    async def send_verification_email(self):
-        return await self.controller.send_verification_email()
+    @post("/send-verification")
+    async def send_verification_email(self, data: EmailWithCallback):
+        return await self.controller.send_verification_email(data)
 
-    @post("/forgot-password")
-    async def forgot_password(self):
-        return await self.controller.forgot_password()
+    @post("/forgot")
+    async def forgot_password(self, data: EmailWithCallback):
+        return await self.controller.forgot_password(data)
 
-    @post("/reset-password")
-    async def reset_password(self):
-        return await self.controller.reset_password()
+    @post("/reset")
+    async def reset_password(self, data: ResetPassword):
+        return await self.controller.reset_password(data)
 
 
 router = AuthRouter(prefix="/auth", tags=["Authentication"])
