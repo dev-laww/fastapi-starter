@@ -44,12 +44,11 @@ class VersionedRoute(APIRoute):
 
     def is_requested_version_matches(self, scope: Scope) -> bool:
         requested_version = scope.get(Constants.REQUESTED_VERSION_SCOPE_KEY)
-        method = scope.get("method")
 
         if not requested_version:  # should not happen when used with VersionMiddleware
             return False
 
-        return requested_version == self.version and method in self.methods
+        return requested_version == self.version
 
     def matches(self, scope: Scope) -> Tuple[Match, Scope]:
         match, updated_scope = super().matches(scope)
