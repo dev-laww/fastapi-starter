@@ -3,7 +3,6 @@ from typing import Any
 
 import arrow
 from fastapi import FastAPI
-from fastapi.responses import JSONResponse
 
 from .core import settings
 from .core.database import db_manager
@@ -14,6 +13,7 @@ from .core.middlewares import (
     setup_logging_middleware,
     setup_version_middleware,
 )
+from .core.response import AppResponse
 from .core.routing import Extractor, RouterMetadata, AppRouter, FileRouter
 
 
@@ -69,7 +69,7 @@ def create_app():
         description=settings.app.description,
         version=settings.app.version,
         debug=settings.debug,
-        default_response_class=JSONResponse,
+        default_response_class=AppResponse,
         docs_url=settings.docs_url if should_add_docs else None,
         redoc_url=settings.redoc_url if should_add_docs else None,
         lifespan=lifespan,

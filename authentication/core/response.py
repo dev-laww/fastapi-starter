@@ -242,11 +242,11 @@ class AppResponse(JSONResponse):
             sanitized = content.model_dump(exclude_none=True)
         else:
             # Wrap raw content in a success response
-            sanitized = Response.success(data=content).model_dump(exclude_none=True)
+            sanitized = Response.ok(data=content).model_dump(exclude_none=True)
 
         super().__init__(
             content=sanitized,
-            status_code=status_code,
+            status_code=sanitized.get("status", status_code),
             headers=headers,
             media_type=media_type,
             background=background,
