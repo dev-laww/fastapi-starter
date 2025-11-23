@@ -6,6 +6,7 @@ from jinja2 import Environment, FileSystemLoader
 
 from ..core.base import AppObject
 from ..core.config import settings
+from ..core.exceptions import AppException
 
 
 class EmailService(AppObject):
@@ -16,9 +17,6 @@ class EmailService(AppObject):
             loader=FileSystemLoader(str(template_path)), autoescape=True
         )
 
-    def __del__(self):
-        resend.api_key = None
-
     def render_template(self, template_name: str, context: Dict):
         template = self.env.get_template(template_name)
         return template.render(context)
@@ -26,9 +24,12 @@ class EmailService(AppObject):
     def send_email(
         self, to_email: Union[str, List[str]], subject: str, html_content: str
     ):
-        params = self.get_params(to_email, subject, html_content)
-        email = resend.Emails.send(params)
-        return email
+        try:
+            params = self.get_params(to_email, subject, html_content)
+            email = resend.Emails.send(params)
+            return email
+        except resend.exceptions.ResendError as e:
+            raise AppException(f"Failed to send email: {e}") from e
 
     @staticmethod
     def get_params(
