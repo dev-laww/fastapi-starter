@@ -112,6 +112,46 @@ class Repository[T](AppObject):
 
         return entity
 
+    async def get_first(self, **filters) -> Optional[T]:
+        """
+        Retrieves the first entity matching the provided filters.
+
+        :param filters: Additional filtering criteria as keyword arguments.
+             Use filter utility functions from authentication.core.base.filters:
+             - gt(value): greater than
+             - gte(value): greater than or equal
+             - lt(value): less than
+             - lte(value): less than or equal
+             - ne(value): not equal
+             - like(pattern): SQL LIKE (case-sensitive)
+             - ilike(pattern): case-insensitive LIKE
+             - in_(values): IN clause
+             - not_in(values): NOT IN clause
+             - is_null(): IS NULL
+             - is_not_null(): IS NOT NULL
+             - plain value: equality (default)
+
+             Example:
+                 from authentication.core.base.filters import gt, ilike, in_
+                 await repo.all(expires_at=gt(datetime.now()), token=ilike("%abc%"))
+        :return: A list of entity instances.
+        """
+
+        try:
+            query = select(self.model)
+
+            query = self._apply_filters(query, **filters)
+
+            result = await self.session.exec(query)
+            return cast(Optional[T], result.first())
+        except SQLAlchemyError as e:
+            logger.error(
+                f"Error retrieving first {self.model.__name__} entity: {str(e)}"
+            )
+            raise DatabaseError(
+                f"Error retrieving first {self.model.__name__} entity"
+            ) from e
+
     async def all(
         self, skip: Optional[int] = None, limit: Optional[int] = None, **filters
     ) -> List[T]:
