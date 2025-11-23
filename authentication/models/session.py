@@ -23,3 +23,7 @@ class Session(BaseDBModel, table=True):
     user: "User" = Relationship(
         back_populates="sessions", sa_relationship_kwargs={"lazy": "selectin"}
     )
+
+    @property
+    def is_expired(self) -> bool:
+        return datetime.datetime.utcnow() > self.expires_at

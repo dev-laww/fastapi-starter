@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from .role import Role
     from .account import Account
     from .session import Session
+    from .verification import Verification
 
 
 class User(BaseDBModel, table=True):
@@ -30,5 +31,9 @@ class User(BaseDBModel, table=True):
     )
 
     sessions: List["Session"] = Relationship(
+        back_populates="user", sa_relationship_kwargs={"lazy": "selectin"}
+    )
+
+    verifications: List["Verification"] = Relationship(
         back_populates="user", sa_relationship_kwargs={"lazy": "selectin"}
     )
