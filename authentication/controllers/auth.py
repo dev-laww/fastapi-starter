@@ -244,7 +244,7 @@ class AuthController(Controller):
 
         return AppResponse.ok(
             message="Verification email sent successfully",
-            data={"token": verification.value} if settings.is_development else None,
+            data={"token": verification.value},
         )
 
     async def social_login(self):
@@ -254,9 +254,7 @@ class AuthController(Controller):
         user = await self.user_repository.get_first(email=data.email)
 
         if not user:
-            return AppResponse.ok(
-                message="If the email exists, a password reset link has been sent"
-            )
+            raise ValidationError("Email not registered")
 
         verification = self._create_verification_token(
             user.id,
@@ -284,8 +282,8 @@ class AuthController(Controller):
         )
 
         return AppResponse.ok(
-            message="If the email exists, a password reset link has been sent",
-            data={"token": verification.value} if settings.is_development else None,
+            message="A password reset link has been sent",
+            data={"token": verification.value},
         )
 
     async def reset_password(self, data: ResetPassword):
