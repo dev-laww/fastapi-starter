@@ -2,6 +2,7 @@ import traceback
 from http import HTTPStatus
 from typing import Mapping, Any, Optional, List
 
+from pydantic import ValidationError
 from starlette.background import BackgroundTask
 from starlette.responses import JSONResponse
 
@@ -236,17 +237,18 @@ class AppResponse(JSONResponse):
     ) -> None:
         """Initialize the response with sanitized content."""
         # If content is already a dict, validate it through Response model
-        if isinstance(content, dict):
-            sanitized = Response(**content).model_dump(exclude_none=True)
-        elif isinstance(content, Response):
-            sanitized = content.model_dump(exclude_none=True)
+        if isinstance(content, Response):
+            sanitized = content
         else:
             # Wrap raw content in a success response
-            sanitized = Response.ok(data=content).model_dump(exclude_none=True)
+            try:
+                sanitized = Response.model_validate(content)
+            except ValidationError:
+                sanitized = Response.ok(data=content)
 
         super().__init__(
-            content=sanitized,
-            status_code=sanitized.get("status", status_code),
+            content=sanitized.model_dump(exclude_none=True),
+            status_code=sanitized.status,
             headers=headers,
             media_type=media_type,
             background=background,
