@@ -279,11 +279,16 @@ class AppRouter(AppObject):
             if not isinstance(meta, RouteMetadata):
                 continue
 
-            # Create a wrapped endpoint with dependency injection
             wrapped_endpoint = self._wrap_endpoint(method, dependencies)
 
+            route_kwargs = {
+                field.name: getattr(meta, field.name)
+                for field in dataclasses.fields(meta)
+            }
+
             self.http_router.add_api_route(
-                endpoint=wrapped_endpoint, **dataclasses.asdict(meta)
+                endpoint=wrapped_endpoint,
+                **route_kwargs,
             )
 
     def _wrap_endpoint(
