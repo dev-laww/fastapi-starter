@@ -1,3 +1,4 @@
+from functools import cached_property
 from typing import Optional, TYPE_CHECKING, List
 
 from pydantic import EmailStr
@@ -38,14 +39,11 @@ class User(BaseDBModel, table=True):
         back_populates="user", sa_relationship_kwargs={"lazy": "selectin"}
     )
 
-    def has_permission(self, permission_name: str) -> bool:
-        """
-        Check if the user has a specific permission by name.
-        """
-        for role in self.roles:
-            for permission in role.permissions:
-                if permission.name != permission_name:
-                    continue
+    @cached_property
+    def permission_names(self):
+        return {
+            permission.name for role in self.roles for permission in role.permissions
+        }
 
-                return True
-        return False
+    def has_permission(self, permission_name: str) -> bool:
+        return permission_name in self.permission_names
