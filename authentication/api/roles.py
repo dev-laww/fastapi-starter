@@ -5,7 +5,7 @@ from fastapi.params import Depends
 
 from ..controllers.role import RoleController
 from ..core.routing import post, get, delete
-from ..core.routing.routers.crud import AppCRUDRouter
+from ..core.routing.routers import AppCRUDRouter
 from ..models import Role
 from ..schemas.role import UpdateRole, CreateRole
 

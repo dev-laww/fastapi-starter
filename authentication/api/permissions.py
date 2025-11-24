@@ -1,5 +1,5 @@
 from ..core.database import Repository
-from ..core.routing.routers.crud import AppCRUDRouter
+from ..core.routing.routers import AppCRUDRouter
 from ..models import Permission
 from ..schemas.permission import CreatePermission, UpdatePermission
 
