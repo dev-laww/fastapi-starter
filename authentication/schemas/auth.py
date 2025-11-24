@@ -60,3 +60,10 @@ class EmailWithCallback(CallbackBase):
 
 class ResetPassword(PasswordValidate):
     token: str
+
+
+class JWTPayload(BaseModel):
+    sub: str
+    exp: int
+    iat: int
+    type: str

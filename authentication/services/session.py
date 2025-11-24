@@ -14,6 +14,7 @@ from ..core.database.repository import get_repository
 from ..core.exceptions import AppException
 from ..core.utils import get_current_utc_datetime
 from ..models import Session
+from ..schemas.auth import JWTPayload
 
 settings = get_settings()
 
@@ -42,8 +43,8 @@ class SessionService(AppObject):
         """
         return secrets.token_urlsafe(32)
 
+    @staticmethod
     def generate_jwt_token(
-        self,
         user_id: UUID,
         expires_in_minutes: int = 60 * 24 * 7,  # Default 7 days
         additional_claims: Optional[dict] = None,
@@ -55,28 +56,31 @@ class SessionService(AppObject):
         now = get_current_utc_datetime()
         expire = now + datetime.timedelta(minutes=expires_in_minutes)
 
-        payload = {
-            "sub": str(user_id),
-            "exp": expire,
-            "iat": now,
-            "type": "access",
-        }
+        payload = JWTPayload(
+            sub=str(user_id),
+            iat=int(now.timestamp()),
+            exp=int(expire.timestamp()),
+            type="access",
+        )
 
         if additional_claims:
             payload.update(additional_claims)
 
-        token = jwt.encode(payload, settings.app.jwt_secret, algorithm="HS256")
+        token = jwt.encode(
+            payload.model_dump(), settings.app.jwt_secret, algorithm="HS256"
+        )
 
         return token
 
-    def verify_jwt_token(self, token: str) -> Optional[dict]:
+    @staticmethod
+    def verify_jwt_token(token: str) -> Optional[JWTPayload]:
         """
         Verify and decode a JWT token.
         Returns the payload if valid, None otherwise.
         """
         try:
             payload = jwt.decode(token, settings.app.jwt_secret, algorithms=["HS256"])
-            return payload
+            return JWTPayload.model_validate(payload)
         except JWTError:
             return None
 
@@ -112,14 +116,13 @@ class SessionService(AppObject):
         Retrieve a session by its token.
         Used for cookie-based authentication validation.
         """
-        sessions = await self.session_repository.all(token=token, limit=1)
-        if not sessions:
+        session = await self.session_repository.get_first(token=token)
+        if not session:
             return None
 
-        session = sessions[0]
-
         # Check if session is expired
-        if session.expires_at < get_current_utc_datetime():
+        if session.is_expired:
+            await self.session_repository.delete(session.id)
             return None
 
         return session
