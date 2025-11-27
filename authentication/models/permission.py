@@ -20,6 +20,7 @@ class Action(Enum):
 
 class Permission(BaseDBModel, table=True):
     __tablename__ = "permissions"
+    __table_args__ = (sa.UniqueConstraint("resource", "action"),)
 
     resource: str = Field(index=True)
     action: Action = Field(
